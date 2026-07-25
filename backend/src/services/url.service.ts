@@ -5,7 +5,11 @@ import {
   incrementClicks,
   getAllUrls,
   getDashboardData,
+  deleteUrl,
+  updateUrl,
 } from "../repositories/url.repository";
+
+import { generateUrlSummary } from "../ai/gemini.service";
 
 export const shortenUrl = async (originalUrl: string) => {
   let shortCode = nanoid(7);
@@ -14,7 +18,39 @@ export const shortenUrl = async (originalUrl: string) => {
     shortCode = nanoid(7);
   }
 
-  return createShortUrl(originalUrl, shortCode);
+  // Default fallback values
+  let title = new URL(originalUrl).hostname;
+  let category = "Website";
+  let summary = `Shortened URL for ${originalUrl}`;
+
+  try {
+    console.log("==================================");
+    console.log("Calling Gemini...");
+    console.log("URL:", originalUrl);
+
+    const aiResponse = await generateUrlSummary(originalUrl);
+
+    console.log("Gemini Response:");
+    console.log(aiResponse);
+
+    const parsed = JSON.parse(aiResponse);
+
+    title = parsed.title || title;
+    category = parsed.category || category;
+    summary = parsed.summary || summary;
+  } catch (error) {
+    console.error("Gemini Error:");
+    console.error(error);
+    console.log("Using fallback values...");
+  }
+
+  return createShortUrl(
+    originalUrl,
+    shortCode,
+    title,
+    category,
+    summary
+  );
 };
 
 export const getOriginalUrl = async (shortCode: string) => {
@@ -44,7 +80,9 @@ export const getDashboardAnalytics = async () => {
   );
 
   const averageClicks =
-    totalUrls === 0 ? 0 : Number((totalClicks / totalUrls).toFixed(2));
+    totalUrls === 0
+      ? 0
+      : Number((totalClicks / totalUrls).toFixed(2));
 
   const topUrls = [...urls]
     .sort((a, b) => b.clicks - a.clicks)
@@ -59,4 +97,15 @@ export const getDashboardAnalytics = async () => {
     topUrls,
     recentUrls,
   };
+};
+
+export const deleteShortUrl = async (id: string) => {
+  return deleteUrl(id);
+};
+
+export const updateShortUrl = async (
+  id: string,
+  originalUrl: string
+) => {
+  return updateUrl(id, originalUrl);
 };

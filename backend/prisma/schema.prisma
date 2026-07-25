@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model ShortUrl {
@@ -11,6 +12,11 @@ model ShortUrl {
   originalUrl String
   shortCode   String   @unique
   clicks      Int      @default(0)
+
+  title       String?
+  category    String?
+  summary     String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
