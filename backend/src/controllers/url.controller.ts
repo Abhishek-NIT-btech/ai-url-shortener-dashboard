@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { createShortUrlSchema } from "../validators/url.validator";
-import { shortenUrl } from "../services/url.service";
+import {
+  shortenUrl,
+  getOriginalUrl,
+  getAllShortUrls,
+} from "../services/url.service";
 
 export const createShortUrlHandler = async (
   req: Request,
@@ -20,6 +24,50 @@ export const createShortUrlHandler = async (
     return res.status(400).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+export const redirectToOriginalUrl = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const shortCode = req.params.shortCode as string;
+
+    const originalUrl = await getOriginalUrl(shortCode);
+
+    if (!originalUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "Short URL not found",
+      });
+    }
+
+    return res.redirect(originalUrl);
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllUrlsHandler = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const urls = await getAllShortUrls();
+
+    return res.status(200).json({
+      success: true,
+      data: urls,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch URLs",
     });
   }
 };

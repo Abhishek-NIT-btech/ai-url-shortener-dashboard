@@ -19,3 +19,33 @@ export const findByShortCode = async (shortCode: string) => {
     },
   });
 };
+
+export const incrementClicks = async (id: string) => {
+  return prisma.shortUrl.update({
+    where: {
+      id,
+    },
+    data: {
+      clicks: {
+        increment: 1,
+      },
+    },
+  });
+};
+
+export const getAllUrls = async () => {
+  return prisma.shortUrl.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
+
+// Dashboard Analytics
+export const getDashboardData = async () => {
+  return prisma.shortUrl.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
